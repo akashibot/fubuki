@@ -1,0 +1,22 @@
+{
+	"name": "hibiki",
+	"module": "src/index.ts",
+	"type": "module",
+	"scripts": {
+		"dev": "bun run src/index.ts -w",
+		"prod": "bun start src/index.ts"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	},
+	"dependencies": {
+		"h3": "^1.11.1",
+		"ipx": "^3.0.1",
+		"ofetch": "^1.3.4",
+		"sharp": "^0.33.4",
+		"unstorage": "^1.10.2"
+	}
+}
