@@ -83,7 +83,7 @@ export const speechHandler = defineEventHandler(async (event) => {
 	if (!targetInfo.width || !targetInfo.height)
 		throw new Error("Invalid image size");
 
-	const balloonHeight = targetInfo.height / 2;
+	const balloonHeight = Math.round(targetInfo.height / 2);
 
 	balloon.resize({
 		fit: "fill",
@@ -93,7 +93,7 @@ export const speechHandler = defineEventHandler(async (event) => {
 
 	const base = await createBox(
 		targetInfo.width,
-		targetInfo.height + balloonHeight,
+		Math.round(targetInfo.height + balloonHeight),
 	);
 
 	base.composite([
