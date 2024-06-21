@@ -22,8 +22,8 @@ export const captionHandler = defineEventHandler(async (event) => {
 		body.image,
 	);
 
-	const captionWidth = imgMetadata.width;
-	const captionHeight = imgMetadata.height / 2;
+	const captionWidth = Math.floor(imgMetadata.width);
+	const captionHeight = Math.floor(imgMetadata.height / 2);
 
 	const base = await createBox(
 		captionWidth,
