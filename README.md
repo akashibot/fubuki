@@ -3,5 +3,7 @@
 
 ## Endpoints
 `/` - home
+
 `/api/caption` - caption an image
+
 `/api/speech` - lol
