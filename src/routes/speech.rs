@@ -1,4 +1,6 @@
-use crate::utils::http::{ErrorResponse, ImagePayload, ImageResponse};
+use std::sync::Arc;
+
+use crate::utils::http::{ErrorResponse, ImagePayload, ImageResponse, IntoHttpResponse};
 use actix_web::{get, HttpResponse};
 use ril::{Image, Rgba};
 
@@ -16,9 +18,7 @@ pub async fn speech(payload: ImagePayload) -> Result<HttpResponse, ErrorResponse
     base.paste(0, 0, &balloon);
     base.paste(0, payload_height, &payload.image.clone());
 
-    ImageResponse {
-        data: base,
-        format: payload.format,
-    }
-    .try_into()
+    let response = Arc::new(ImageResponse::new(base, payload.format));
+
+    response.into_http_response().await
 }

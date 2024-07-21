@@ -1,17 +1,16 @@
-use std::{
-    future::Ready,
-    sync::Arc,
+use crate::utils::{
+    self,
+    http::{ErrorResponse, ImagePayload},
 };
-use std::future::ready;
 use actix_web::{
     dev::{self, Service, ServiceRequest, ServiceResponse, Transform},
     web, Error, HttpMessage,
 };
-use futures_util::future::{LocalBoxFuture};
-use crate::utils::{self, http::{ImagePayload, ErrorResponse}};
+use futures_util::future::LocalBoxFuture;
+use std::future::ready;
+use std::{future::Ready, sync::Arc};
 
 pub struct ImageParser;
-
 
 impl<S> Transform<S, ServiceRequest> for ImageParser
 where

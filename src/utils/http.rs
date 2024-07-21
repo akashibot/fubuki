@@ -9,8 +9,9 @@ use ril::{Image, ImageFormat, Rgba};
 use serde::{Deserialize, Serialize};
 use std::{
     future::{ready, Ready},
-    convert::TryFrom,
+    sync::{Arc, Mutex},
 };
+use tokio::task::JoinError;
 // use md5;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -96,15 +97,31 @@ impl error::ResponseError for ErrorResponse {
 }
 
 pub struct ImageResponse {
-    pub data: Image<Rgba>,
+    pub data: Arc<Mutex<Image<Rgba>>>,
     pub format: ImageFormat,
 }
 
 impl ImageResponse {
-    fn encode_image(&self) -> Result<Vec<u8>, ril::Error> {
-        let mut bytes = Vec::new();
-        self.data.encode(self.format, &mut bytes)?;
-        Ok(bytes)
+    pub fn new(image: Image<Rgba>, format: ImageFormat) -> Self {
+        Self {
+            data: Arc::new(Mutex::new(image)),
+            format,
+        }
+    }
+
+    async fn encode_image(self: Arc<Self>) -> Result<Vec<u8>, ril::Error> {
+        // Clone self to move into the closure
+        let self_clone = self.clone();
+        let encoded_bytes: Result<Result<Vec<u8>, ()>, JoinError> =
+            tokio::task::spawn_blocking(move || {
+                let data = self_clone.data.lock().unwrap();
+                let mut bytes = Vec::new();
+                let _ = data.encode(self_clone.format, &mut bytes);
+                Ok(bytes)
+            })
+            .await;
+
+        Ok(encoded_bytes.unwrap().unwrap())
     }
 
     // fn etag_value(bytes: &[u8]) -> String {
@@ -122,15 +139,19 @@ impl ImageResponse {
     }
 }
 
-impl TryFrom<ImageResponse> for HttpResponse {
-    type Error = ErrorResponse;
+#[async_trait::async_trait]
+pub trait IntoHttpResponse {
+    async fn into_http_response(self) -> Result<HttpResponse, ErrorResponse>;
+}
 
-    fn try_from(image_response: ImageResponse) -> Result<Self, ErrorResponse> {
-        let bytes = image_response.encode_image()?;
+#[async_trait::async_trait]
+impl IntoHttpResponse for Arc<ImageResponse> {
+    async fn into_http_response(self) -> Result<HttpResponse, ErrorResponse> {
+        let bytes = self.clone().encode_image().await?;
         // let etag_value = ImageResponse::etag_value(&bytes);
 
         Ok(HttpResponse::Ok()
-            .content_type(image_response.content_type())
+            .content_type(self.content_type())
             // .insert_header(CacheControl(vec![CacheDirective::MaxAge(360u32)]))
             // .insert_header(ETag(EntityTag::new_strong(etag_value.clone())))
             // .insert_header(IfNoneMatch::Items(vec![EntityTag::new(

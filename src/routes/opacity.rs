@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
 use actix_web::{get, web, HttpResponse};
 use serde::Deserialize;
 
-use crate::utils::http::{ErrorResponse, ImagePayload, ImageResponse};
+use crate::utils::http::{ErrorResponse, ImagePayload, ImageResponse, IntoHttpResponse};
 
 #[derive(Deserialize)]
 pub struct OpacityPayload {
@@ -14,11 +16,13 @@ pub async fn opacity(
     opacity_payload: web::Path<OpacityPayload>,
 ) -> Result<HttpResponse, ErrorResponse> {
     let value = opacity_payload.value;
-    
+
     if !(0.0..=1.0).contains(&value) {
-        return Err(ErrorResponse { message: "opacity must be between 0 and 1".to_string() })
+        return Err(ErrorResponse {
+            message: "opacity must be between 0 and 1".to_string(),
+        });
     }
-    
+
     let image = payload.image.clone();
 
     let result = image.map_pixels(|pixel| {
@@ -27,9 +31,7 @@ pub async fn opacity(
         rgba
     });
 
-    ImageResponse {
-        data: result,
-        format: payload.format,
-    }
-    .try_into()
+    let response = Arc::new(ImageResponse::new(result, payload.format));
+
+    response.into_http_response().await
 }

@@ -1,4 +1,6 @@
-use crate::utils::http::{ErrorResponse, ImagePayload, ImageResponse};
+use std::sync::Arc;
+
+use crate::utils::http::{ErrorResponse, ImagePayload, ImageResponse, IntoHttpResponse};
 use actix_web::{get, web, HttpResponse};
 use ril::ImageFormat;
 use serde::Deserialize;
@@ -22,10 +24,10 @@ pub async fn convert(
         ImageFormat::Unknown => Err(ErrorResponse {
             message: "unknown mime".to_string(),
         }),
-        _ => ImageResponse {
-            data: payload.image.clone(),
-            format: new_mime,
+        _ => {
+            let response = Arc::new(ImageResponse::new(payload.image.clone(), new_mime));
+
+            response.into_http_response().await
         }
-        .try_into(),
     }
 }

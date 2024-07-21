@@ -1,8 +1,8 @@
 #![feature(slice_pattern)]
 extern crate core;
 
-use actix_web::{App, get, HttpResponse, HttpServer, Responder, web};
 use actix_web::http::header::{CacheControl, CacheDirective};
+use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use serde_json::json;
 use sysinfo::System;
 
@@ -25,13 +25,11 @@ async fn health() -> impl Responder {
 
     HttpResponse::Ok()
         .insert_header(CacheControl(vec![CacheDirective::NoCache]))
-        .json(
-            json!({
-                "alive": true,
-                "memory": format!("{} MB", memory_usage),
-                "cpu": format!("{:.1}%", cpu_usage),
-            })
-        )
+        .json(json!({
+            "alive": true,
+            "memory": format!("{} MB", memory_usage),
+            "cpu": format!("{:.1}%", cpu_usage),
+        }))
 }
 
 #[actix_web::main]
@@ -48,10 +46,10 @@ async fn main() -> std::io::Result<()> {
                     .service(routes::caption::caption)
                     .service(routes::opacity::opacity)
                     .service(routes::convert::convert)
-                    .service(routes::circle::circle)
+                    .service(routes::circle::circle),
             )
     })
-        .bind(("127.0.0.1", 8080))?
-        .run()
-        .await
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
 }

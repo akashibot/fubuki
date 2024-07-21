@@ -13,3 +13,5 @@ anyhow = "1.0.86"
 md5 = "0.7.0"
 futures-util = "0.3.30"
 sysinfo = "0.30.13"
+tokio = { version = "1.38.1", features = ["rt-multi-thread"] }
+async-trait = "0.1.81"
