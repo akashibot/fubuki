@@ -1,4 +1,6 @@
-use crate::utils::http::{ErrorResponse, ImagePayload, ImageResponse};
+use std::sync::Arc;
+
+use crate::utils::http::{ErrorResponse, ImagePayload, ImageResponse, IntoHttpResponse};
 use actix_web::{get, web, HttpResponse};
 use ril::{Font, Image, Rgba, TextLayout, TextSegment, WrapStyle};
 use serde::Deserialize;
@@ -39,11 +41,9 @@ pub async fn caption(
     base.paste(0, 0, &caption_box);
     base.paste(0, payload_height / 2, &payload.image.clone());
 
-    ImageResponse {
-        data: base,
-        format: payload.format,
-    }
-    .try_into()
+    let response = Arc::new(ImageResponse::new(base, payload.format));
+
+    response.into_http_response().await
 }
 
 pub fn determine_font_size(text: &str, image_width: u32, image_height: u32) -> f32 {
